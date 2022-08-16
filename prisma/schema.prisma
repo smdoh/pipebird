@@ -7,8 +7,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  id           Int    @id @default(autoincrement())
-  email        String @unique
-  passwordHash String
+model Organization {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  secretKey  String   @unique
+  licenseKey String
+
+  sources Source[]
+  tenants Tenant[]
+}
+
+model Tenant {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  identifier String
+
+  destinations   Destination[]
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId Int
+}
+
+model Configuration {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  columns   String
+
+  destinations Destination[]
+  view         View          @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId       Int
+}
+
+model View {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tableExpression String
+  tenantColumn    String
+
+  source         Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId       Int
+  configurations Configuration[]
+}
+
+model Source {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  name       String
+  status     String   @default("REACHABLE")
+  sourceType String
+
+  views          View[]
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId Int
+}
+
+model Destination {
+  id               Int      @id @default(autoincrement())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  name             String
+  status           String   @default("REACHABLE")
+  destinationType  String
+  connectionString String?
+
+  transfers       Transfer[]
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  configurationId Int
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId        Int
+}
+
+model Transfer {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  finalizedAt DateTime?
+  status      String
+
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destinationId Int
 }
