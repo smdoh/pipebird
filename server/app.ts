@@ -8,10 +8,7 @@ app.disable("x-powered-by");
 app.disable("etag");
 
 app.use(express.json());
-app.use((req, res, next) => {
-  httpLogger(req, res);
-  next();
-});
+app.use(httpLogger);
 
 app.use(indexRouter);
 
