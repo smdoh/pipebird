@@ -5,25 +5,10 @@ import { RealizeApiResponse } from "../../../lib/handlers.js";
 import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
 import { default as validator } from "validator";
+import { cursorPaginationValidator } from "../../../lib/pagination.js";
 const configurationRouter = Router();
 
 // List configurations
-const listConfigurationQueryParams = z.object({
-  cursor: z.number().optional(),
-  take: z
-    .string()
-    .default("25")
-    .refine((val) => validator.isNumeric(val, { no_symbols: true }), {
-      message: "The take parameter must be an integer.",
-    })
-    .transform((s) => parseInt(s))
-    .refine((val) => val > 0, {
-      message: "The take parameter must be greater than 0.",
-    })
-    .refine((val) => val <= 1000, {
-      message: "The take parameter must be less than or equal to 1000.",
-    }),
-});
 
 configurationRouter.get(
   "/",
@@ -37,16 +22,16 @@ configurationRouter.get(
       }>[]
     >,
   ) => {
-    const queryResult = listConfigurationQueryParams.safeParse(req.query);
+    const queryParams = cursorPaginationValidator.safeParse(req.query);
 
-    if (!queryResult.success) {
+    if (!queryParams.success) {
       return res.status(HttpStatusCode.BAD_REQUEST).json({
         code: "query_validation_error",
-        validationIssues: queryResult.error.issues,
+        validationIssues: queryParams.error.issues,
       });
     }
 
-    const { take, cursor } = queryResult.data;
+    const { take, cursor } = queryParams.data;
 
     const configurations = await db.configuration.findMany({
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -116,7 +101,12 @@ configurationRouter.post(
         db.columnTransformation.create({
           data: {
             configurationId: configuration.id,
-            ...column,
+            destinationFormatString: column.destinationFormatString,
+            isLastModified: column.isLastModified,
+            isPrimaryKey: column.isPrimaryKey,
+            nameInDestination: column.nameInDestination,
+            nameInSource: column.nameInSource,
+            transformer: column.transformer,
           },
           select: {
             nameInSource: true,

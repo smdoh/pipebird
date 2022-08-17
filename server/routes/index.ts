@@ -1,7 +1,7 @@
 import "express-async-errors";
 import { Router } from "express";
 import { configurationRouter } from "./configurations/index.js";
-import { destinationRouter } from "./destinations.ts/index.js";
+import { destinationRouter } from "./destinations/index.js";
 import { healthzRouter } from "./healthz.js";
 import { sourceRouter } from "./sources/index.js";
 import { viewRouter } from "./views/index.js";
