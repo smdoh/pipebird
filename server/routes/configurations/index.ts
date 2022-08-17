@@ -9,7 +9,6 @@ import { cursorPaginationValidator } from "../../../lib/pagination.js";
 const configurationRouter = Router();
 
 // List configurations
-
 configurationRouter.get(
   "/",
   async (
@@ -42,7 +41,6 @@ configurationRouter.get(
 );
 
 // Create configuration
-
 configurationRouter.post(
   "/",
   async (
@@ -158,6 +156,56 @@ configurationRouter.get(
       });
     }
     const configuration = await db.configuration.findUnique({
+      where: {
+        id: queryParams.data.configurationId,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!configuration) {
+      return res
+        .status(HttpStatusCode.NOT_FOUND)
+        .json({ code: "configuration_id_not_found" });
+    }
+    return res.status(HttpStatusCode.OK).json({ content: configuration });
+  },
+);
+
+// Delete configuration
+configurationRouter.delete(
+  "/:configurationId",
+  async (
+    req,
+    res: RealizeApiResponse<
+      Prisma.ConfigurationGetPayload<{
+        select: {
+          id: true;
+        };
+      }>
+    >,
+  ) => {
+    const queryParams = z
+      .object({
+        configurationId: z
+          .string()
+          .min(1)
+          .refine((val) => validator.isNumeric(val, { no_symbols: true }), {
+            message: "The configurationId query param must be an integer.",
+          })
+          .transform((s) => parseInt(s)),
+      })
+      .safeParse(req.query);
+
+    if (!queryParams.success) {
+      return res.status(HttpStatusCode.NOT_FOUND).json({
+        code: "query_validation_error",
+        message: "Invalid or missing configuration_id in path.",
+        validationIssues: queryParams.error.issues,
+      });
+    }
+
+    const configuration = await db.configuration.delete({
       where: {
         id: queryParams.data.configurationId,
       },

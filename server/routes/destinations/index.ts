@@ -174,4 +174,49 @@ destinationRouter.get(
   },
 );
 
+// Delete destination
+destinationRouter.get(
+  "/:destinationId",
+  async (
+    req,
+    res: RealizeApiResponse<
+      Prisma.DestinationGetPayload<{
+        select: {
+          id: true;
+        };
+      }>
+    >,
+  ) => {
+    const queryParams = z
+      .object({
+        destinationId: z
+          .string()
+          .min(1)
+          .refine((val) => validator.isNumeric(val, { no_symbols: true }), {
+            message: "The configurationId query param must be an integer.",
+          })
+          .transform((s) => parseInt(s)),
+      })
+      .safeParse(req.query);
+    if (!queryParams.success) {
+      return res
+        .status(HttpStatusCode.BAD_REQUEST)
+        .json({ code: "query_validation_error" });
+    }
+    const destination = await db.destination.delete({
+      where: {
+        id: queryParams.data.destinationId,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!destination) {
+      return res
+        .status(HttpStatusCode.NOT_FOUND)
+        .json({ code: "destination_id_not_found" });
+    }
+    return res.status(HttpStatusCode.OK).json({ content: destination });
+  },
+);
 export { destinationRouter };
