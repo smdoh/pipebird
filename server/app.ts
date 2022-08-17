@@ -19,11 +19,7 @@ app.disable("etag");
 
 app.use(express.json());
 app.use(helmet());
-
-app.use((req, res, next) => {
-  httpLogger(req, res);
-  next();
-});
+app.use(httpLogger);
 
 app.use(
   async (req: Request, res: Response<ErrorApiSchema>, next: NextFunction) => {
