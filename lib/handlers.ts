@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { z } from "zod";
 
-export type RealizeApiResponse<T> = Response<ErrorApiSchema | { content: T }>;
-
+export type ApiResponse<T> = Response<ErrorApiSchema | T>;
+export type ListApiResponse<T> = Response<ErrorApiSchema | { content: T[] }>;
 const errorCodeSchema = z.enum([
   "unauthorized",
   "body_validation_error",

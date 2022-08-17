@@ -1,0 +1,945 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Realize",
+    "description": "Private VPC data etl pipeline.",
+    "version": "1.0",
+    "contact": {
+      "url": "realizefi.com",
+      "name": "Curtis Mason",
+      "email": "curtis@realizefi.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Configurations",
+      "description": "Configuration defining transformations for a materialized view."
+    },
+    {
+      "name": "Transfers",
+      "description": "Progress of a data transfer between sources, and destinations."
+    },
+    {
+      "name": "Destinations",
+      "description": "Data destinations indicating final location of a pipeline."
+    },
+    {
+      "name": "Sources",
+      "description": "Initial data source for a pipeline."
+    },
+    {
+      "name": "Views",
+      "description": "Materialized view of a table created from some source."
+    }
+  ],
+  "paths": {
+    "/configurations": {
+      "get": {
+        "summary": "List configuration sets",
+        "tags": ["Configurations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Configuration"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-configs",
+        "description": "List all customer configuration sets"
+      },
+      "post": {
+        "summary": "Create configuration set",
+        "tags": ["Configurations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-configs",
+        "description": "Create a new transformation configuration to be applied on some given view.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConfiguration"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          },
+          "description": "Configuration request payload."
+        }
+      },
+      "parameters": []
+    },
+    "/configurations/{configuration_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "configuration_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this configuration object."
+        }
+      ],
+      "get": {
+        "summary": "Get configuration by ID",
+        "description": "Get customer defined transformation(s) configuration set.",
+        "tags": ["Configurations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-configuration-by-id"
+      },
+      "delete": {
+        "description": "Delete configuration.",
+        "tags": ["Configurations"],
+        "summary": "Delete configuration.",
+        "operationId": "delete-configurations-configuration_id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources": {
+      "get": {
+        "summary": "List sources",
+        "tags": ["Sources"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Source"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-sources",
+        "description": "List all of your data sources."
+      },
+      "post": {
+        "summary": "Create a source",
+        "tags": ["Sources"],
+        "operationId": "post-sources",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSource"
+              }
+            }
+          },
+          "description": "Create data source payload. Views may later pipe data from this source."
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Returns identifier of the created data source."
+      },
+      "parameters": []
+    },
+    "/sources/{source_id}": {
+      "parameters": [
+        {
+          "description": "The id of this data source.",
+          "schema": {
+            "type": "string"
+          },
+          "name": "source_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get source by ID",
+        "operationId": "get-source-by-id",
+        "description": "Get data source info.",
+        "tags": ["Sources"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/Source"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/views": {
+      "get": {
+        "summary": "List views",
+        "tags": ["Views"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/View"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-views",
+        "description": "List all materialized views."
+      },
+      "post": {
+        "summary": "Create a view",
+        "tags": ["Views"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-views",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateView"
+              }
+            }
+          }
+        },
+        "description": "Create a new materialized view for a given integration based on a table expression"
+      }
+    },
+    "/views/{view_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "view_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this view."
+        }
+      ],
+      "get": {
+        "description": "Get a view by ID. Views represent tabular data piped from a specific data source. Custoemrs may then defined configurations to modify views.",
+        "summary": "Get a view by ID",
+        "tags": ["Views"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/View"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-views-view_id"
+      }
+    },
+    "/destinations": {
+      "get": {
+        "summary": "List all destinations",
+        "tags": ["Destinations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/Destination"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-destinations",
+        "description": "A list of all the output destinations created by customers"
+      },
+      "post": {
+        "summary": "Create a new destination",
+        "tags": ["Destinations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-destinations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDestination"
+              }
+            }
+          }
+        },
+        "description": "Create a new destination on behalf of a customer according to a set of configurations"
+      }
+    },
+    "/destinations/{destination_id}": {
+      "get": {
+        "description": "Get destination by id.",
+        "summary": "Get destination by ID",
+        "operationId": "get-destination-by-id",
+        "tags": ["Destinations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "destination_type": {
+                      "type": "string"
+                    },
+                    "configuration_id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "destination_id",
+          "in": "path",
+          "required": true,
+          "description": "The id for this destination object."
+        }
+      ],
+      "delete": {
+        "description": "Delete destination",
+        "summary": "Delete destination by ID",
+        "tags": ["Destinations"],
+        "operationId": "delete-destinations-destination_id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transfers": {
+      "parameters": [],
+      "post": {
+        "summary": "Create a new transfer",
+        "tags": ["Transfers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/Transfer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-transfers",
+        "parameters": [],
+        "description": "Initialize a new transfer for a given destination",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransfer"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          },
+          "description": "Create transfer payload."
+        }
+      },
+      "get": {
+        "summary": "List transfers by destination",
+        "tags": ["Transfers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Transfer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-transfers",
+        "description": "List all previous transfers for a given destination"
+      }
+    },
+    "/transfers/{transfer_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "transfer_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this transfer object."
+        }
+      ],
+      "get": {
+        "summary": "Get a transfer progress.",
+        "description": "Get a transfer object which represents the status of a created data pipeline.",
+        "tags": ["Transfers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/Transfer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-destinations-destination_id-transfers-transfer_id"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Configuration": {
+        "title": "Configuration",
+        "x-stoplight": {
+          "id": "veg4lphalqaxn"
+        },
+        "type": "object",
+        "properties": {
+          "viewId": {
+            "type": "number"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nameInSource": {
+                  "type": "string"
+                },
+                "nameInDestination": {
+                  "type": "string"
+                },
+                "destinationFormatString": {
+                  "type": "string"
+                },
+                "transformer": {
+                  "type": "string"
+                },
+                "isPrimaryKey": {
+                  "type": "boolean"
+                },
+                "isLastModified": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "View": {
+        "title": "View",
+        "x-stoplight": {
+          "id": "yrvycyz8waltq"
+        },
+        "type": "object",
+        "properties": {
+          "table_expression": {
+            "type": "string"
+          },
+          "tenant_column": {
+            "type": "string"
+          },
+          "source_id": {
+            "type": "number"
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "Source": {
+        "title": "Source",
+        "x-stoplight": {
+          "id": "buaus9gq5e5dw"
+        },
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "Destination": {
+        "title": "Destination",
+        "x-stoplight": {
+          "id": "el9hfq298kemv"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["PROVISIONED_S3"]
+              },
+              "configurationType": {
+                "type": "number"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              }
+            }
+          },
+          {
+            "properties": {
+              "configurationId": {
+                "type": "number"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["POSTGRES", "MYSQL"]
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number"
+              },
+              "database": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "type": "object"
+      },
+      "Transfer": {
+        "title": "Transfer",
+        "x-stoplight": {
+          "id": "bxsgfx59csf0r"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "destination_id": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "finalized_at": {
+            "type": ["string", "null"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["STARTED", "PENDING", "COMPLETE", "FAILED"]
+          }
+        }
+      },
+      "SourceType": {
+        "type": "string",
+        "title": "SourceTypes",
+        "x-stoplight": {
+          "id": "2prtl486bum6x"
+        },
+        "enum": ["MYSQL", "POSTGRES", "SNOWFLAKE", "REDSHIFT", "BIGQUERY"]
+      },
+      "Status": {
+        "type": "string",
+        "title": "Status",
+        "x-stoplight": {
+          "id": "t56y9xrybpdkz"
+        },
+        "enum": ["REACHABLE", "UNREACHABLE"]
+      },
+      "CreateConfiguration": {
+        "title": "CreateConfiguration",
+        "x-stoplight": {
+          "id": "g45k1cg1s4jnj"
+        },
+        "type": "object",
+        "properties": {
+          "viewId": {
+            "type": "number"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nameInSource": {
+                  "type": "string"
+                },
+                "nameInDestination": {
+                  "type": "string"
+                },
+                "destinationFormatString": {
+                  "type": "string"
+                },
+                "transformer": {
+                  "type": "string"
+                },
+                "isPrimaryKey": {
+                  "type": "boolean"
+                },
+                "isLastModified": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateSource": {
+        "title": "CreateSource",
+        "x-stoplight": {
+          "id": "b933qso2brbv3"
+        },
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateDestination": {
+        "title": "CreateDestination",
+        "x-stoplight": {
+          "id": "imd725at5ztyy"
+        },
+        "schema": {
+          "oneOf": [
+            {
+              "properties": {
+                "configurationId": {
+                  "type": "number"
+                },
+                "destinationType": {
+                  "type": "string",
+                  "enum": ["POSTGRES", "MYSQL"]
+                },
+                "host": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "number"
+                },
+                "database": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "tenantId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "destinationType": {
+                  "type": "string",
+                  "enum": ["PROVISIONED_S3"]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "configurationId": {
+                  "type": "number"
+                },
+                "tenantId": {
+                  "type": "string"
+                }
+              }
+            }
+          ],
+          "type": "object"
+        }
+      },
+      "CreateTransfer": {
+        "title": "CreateTransfer",
+        "x-stoplight": {
+          "id": "uo9wrwwm66em1"
+        },
+        "schema": {
+          "type": "object",
+          "properties": {
+            "destination_id": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "CreateView": {
+        "title": "CreateView",
+        "x-stoplight": {
+          "id": "hstgftguuqy0k"
+        },
+        "schema": {
+          "type": "object",
+          "properties": {
+            "table_expression": {
+              "type": "string"
+            },
+            "tenant_column": {
+              "type": "string"
+            },
+            "source_id": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
+}

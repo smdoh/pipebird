@@ -1,26 +1,34 @@
 import { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { db } from "../../../lib/db.js";
-import { RealizeApiResponse } from "../../../lib/handlers.js";
+import { ApiResponse, ListApiResponse } from "../../../lib/handlers.js";
 import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
 import { default as validator } from "validator";
 import { cursorPaginationValidator } from "../../../lib/pagination.js";
 const configurationRouter = Router();
 
+type ConfigurationResponse = Prisma.ConfigurationGetPayload<{
+  select: {
+    id: true;
+    viewId: true;
+    columns: {
+      select: {
+        nameInSource: true;
+        nameInDestination: true;
+        destinationFormatString: true;
+        transformer: true;
+        isPrimaryKey: true;
+        isLastModified: true;
+      };
+    };
+  };
+}>;
+
 // List configurations
 configurationRouter.get(
   "/",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.ConfigurationGetPayload<{
-        select: {
-          id: true;
-        };
-      }>[]
-    >,
-  ) => {
+  async (req, res: ListApiResponse<ConfigurationResponse>) => {
     const queryParams = cursorPaginationValidator.safeParse(req.query);
 
     if (!queryParams.success) {
@@ -33,6 +41,20 @@ configurationRouter.get(
     const { take, cursor } = queryParams.data;
 
     const configurations = await db.configuration.findMany({
+      select: {
+        viewId: true,
+        id: true,
+        columns: {
+          select: {
+            nameInSource: true,
+            nameInDestination: true,
+            destinationFormatString: true,
+            transformer: true,
+            isPrimaryKey: true,
+            isLastModified: true,
+          },
+        },
+      },
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
       take,
     });
@@ -43,26 +65,7 @@ configurationRouter.get(
 // Create configuration
 configurationRouter.post(
   "/",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.ConfigurationGetPayload<{
-        select: {
-          id: true;
-          columns: {
-            select: {
-              nameInSource: true;
-              nameInDestination: true;
-              transformer: true;
-              destinationFormatString: true;
-              isPrimaryKey: true;
-              isLastModified: true;
-            };
-          };
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<ConfigurationResponse>) => {
     const body = z
       .object({
         viewId: z.number().nonnegative(),
@@ -91,6 +94,7 @@ configurationRouter.post(
       },
       select: {
         id: true,
+        viewId: true,
       },
     });
 
@@ -109,8 +113,8 @@ configurationRouter.post(
           select: {
             nameInSource: true,
             nameInDestination: true,
-            transformer: true,
             destinationFormatString: true,
+            transformer: true,
             isPrimaryKey: true,
             isLastModified: true,
           },
@@ -120,23 +124,14 @@ configurationRouter.post(
 
     return res
       .status(HttpStatusCode.CREATED)
-      .json({ content: { ...configuration, columns } });
+      .json({ ...configuration, columns });
   },
 );
 
 // Get configuration
 configurationRouter.get(
   "/:configurationId",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.ConfigurationGetPayload<{
-        select: {
-          id: true;
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<ConfigurationResponse>) => {
     const queryParams = z
       .object({
         configurationId: z
@@ -161,6 +156,17 @@ configurationRouter.get(
       },
       select: {
         id: true,
+        viewId: true,
+        columns: {
+          select: {
+            nameInSource: true,
+            nameInDestination: true,
+            destinationFormatString: true,
+            transformer: true,
+            isPrimaryKey: true,
+            isLastModified: true,
+          },
+        },
       },
     });
     if (!configuration) {
@@ -168,23 +174,14 @@ configurationRouter.get(
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "configuration_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json({ content: configuration });
+    return res.status(HttpStatusCode.OK).json(configuration);
   },
 );
 
 // Delete configuration
 configurationRouter.delete(
   "/:configurationId",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.ConfigurationGetPayload<{
-        select: {
-          id: true;
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<ConfigurationResponse>) => {
     const queryParams = z
       .object({
         configurationId: z
@@ -211,6 +208,17 @@ configurationRouter.delete(
       },
       select: {
         id: true,
+        viewId: true,
+        columns: {
+          select: {
+            nameInSource: true,
+            nameInDestination: true,
+            destinationFormatString: true,
+            transformer: true,
+            isPrimaryKey: true,
+            isLastModified: true,
+          },
+        },
       },
     });
     if (!configuration) {
@@ -218,7 +226,7 @@ configurationRouter.delete(
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "configuration_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json({ content: configuration });
+    return res.status(HttpStatusCode.OK).json(configuration);
   },
 );
 

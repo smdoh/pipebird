@@ -1,31 +1,27 @@
-import { Prisma } from "@prisma/client";
+import { Destination, Prisma } from "@prisma/client";
 import { Router } from "express";
 import { db } from "../../../lib/db.js";
-import { RealizeApiResponse } from "../../../lib/handlers.js";
+import { ApiResponse, ListApiResponse } from "../../../lib/handlers.js";
 import { cursorPaginationValidator } from "../../../lib/pagination.js";
 import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
 import { default as validator } from "validator";
 const destinationRouter = Router();
 
+type DestinationResponse = Prisma.DestinationGetPayload<{
+  select: {
+    id: true;
+    tenantId: true;
+    configurationId: true;
+    destinationType: true;
+    name: true;
+  };
+}>;
+
 // List destinations
 destinationRouter.get(
   "/",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.DestinationGetPayload<{
-        select: {
-          id: true;
-          destinationType: true;
-          status: true;
-          name: true;
-          tenantId: true;
-          configurationId: true;
-        };
-      }>[]
-    >,
-  ) => {
+  async (req, res: ListApiResponse<DestinationResponse>) => {
     const queryParams = cursorPaginationValidator.safeParse(req.query);
     if (!queryParams.success) {
       return res.status(HttpStatusCode.BAD_REQUEST).json({
@@ -35,6 +31,13 @@ destinationRouter.get(
     }
     const { cursor, take } = queryParams.data;
     const destinations = await db.destination.findMany({
+      select: {
+        id: true,
+        tenantId: true,
+        configurationId: true,
+        destinationType: true,
+        name: true,
+      },
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
       take,
     });
@@ -45,20 +48,7 @@ destinationRouter.get(
 // Create destination
 destinationRouter.post(
   "/",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.DestinationGetPayload<{
-        select: {
-          id: true;
-          tenantId: true;
-          name: true;
-          configurationId: true;
-          destinationType: true;
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<DestinationResponse>) => {
     const body = z
       .union([
         z.object({
@@ -106,9 +96,7 @@ destinationRouter.post(
             destinationType: true,
           },
         });
-        return res
-          .status(HttpStatusCode.CREATED)
-          .json({ content: destination });
+        return res.status(HttpStatusCode.CREATED).json(destination);
       }
       default: {
         return res.status(HttpStatusCode.NOT_IMPLEMENTED).json({
@@ -123,20 +111,7 @@ destinationRouter.post(
 // Get destination
 destinationRouter.get(
   "/:destinationId",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.DestinationGetPayload<{
-        select: {
-          id: true;
-          tenantId: true;
-          name: true;
-          configurationId: true;
-          destinationType: true;
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<DestinationResponse>) => {
     const queryParams = z
       .object({
         destinationId: z
@@ -170,23 +145,14 @@ destinationRouter.get(
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "destination_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json({ content: destination });
+    return res.status(HttpStatusCode.OK).json(destination);
   },
 );
 
 // Delete destination
-destinationRouter.get(
+destinationRouter.delete(
   "/:destinationId",
-  async (
-    req,
-    res: RealizeApiResponse<
-      Prisma.DestinationGetPayload<{
-        select: {
-          id: true;
-        };
-      }>
-    >,
-  ) => {
+  async (req, res: ApiResponse<DestinationResponse>) => {
     const queryParams = z
       .object({
         destinationId: z
@@ -209,6 +175,10 @@ destinationRouter.get(
       },
       select: {
         id: true,
+        tenantId: true,
+        name: true,
+        configurationId: true,
+        destinationType: true,
       },
     });
     if (!destination) {
@@ -216,7 +186,7 @@ destinationRouter.get(
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "destination_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json({ content: destination });
+    return res.status(HttpStatusCode.OK).json(destination);
   },
 );
 export { destinationRouter };
