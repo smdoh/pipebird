@@ -1,3 +1,4 @@
+import "express-async-errors";
 import { Router } from "express";
 import { configurationRouter } from "./configurations/index.js";
 import { destinationRouter } from "./destinations.ts/index.js";

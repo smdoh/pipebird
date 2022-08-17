@@ -3,12 +3,12 @@ import { Router } from "express";
 const viewRouter = Router();
 
 // List views
-viewRouter.get("/", async (req, res) => {});
+viewRouter.get("/", async () => {});
 
 // Create view
-viewRouter.post("/", async (req, res) => {});
+viewRouter.post("/", async () => {});
 
 // Get view
-viewRouter.get("/:view_id", async (req, res) => {});
+viewRouter.get("/:view_id", async () => {});
 
 export { viewRouter };
