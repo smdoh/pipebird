@@ -7,8 +7,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  id           Int    @id @default(autoincrement())
-  email        String @unique
-  passwordHash String
+model Tenant {
+  id           Int           @id @default(autoincrement())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  identifier   String
+  destinations Destination[]
+}
+
+model ConfigurationColumn {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  column_name         String
+  name_in_source      String
+  name_in_destination String
+  dest_format_str     String
+  transformer         String
+  is_primary_key      Boolean
+  is_last_modified    Boolean
+  configuration       Configuration @relation(fields: [configurationId], references: [id])
+  configurationId     Int
+}
+
+model Configuration {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  destinations        Destination[] // might want to fork data into multiple warehouses
+  view                View                  @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId              Int
+  ConfigurationColumn ConfigurationColumn[]
+}
+
+model View {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tableExpression String
+  tenantColumn    String
+
+  source         Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId       Int
+  configurations Configuration[]
+}
+
+model Source {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  name       String
+  status     String   @default("REACHABLE")
+  sourceType String
+
+  views View[]
+}
+
+model Destination {
+  id               Int      @id @default(autoincrement())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  name             String
+  status           String   @default("REACHABLE")
+  destinationType  String   @default("PROVISIONED_S3")
+  connectionString String?
+
+  transfers       Transfer[]
+  configuration   Configuration @relation(fields: [configurationId], references: [id], onDelete: Cascade)
+  configurationId Int
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId        Int
+}
+
+model Transfer {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  finalizedAt DateTime?
+  status      String
+
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  destinationId Int
 }
