@@ -29,15 +29,31 @@ model Tenant {
   organizationId Int
 }
 
+model ConfigurationColumn {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  column_name         String
+  name_in_source      String
+  name_in_destination String
+  dest_format_str     String
+  transformer         String
+  is_primary_key      Boolean
+  is_last_modified    Boolean
+  configuration       Configuration @relation(fields: [configurationId], references: [id])
+  configurationId     Int
+}
+
 model Configuration {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  columns   String
 
-  destinations Destination[]
-  view         View          @relation(fields: [viewId], references: [id], onDelete: Cascade)
-  viewId       Int
+  destinations        Destination[]
+  view                View                  @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId              Int
+  ConfigurationColumn ConfigurationColumn[]
 }
 
 model View {
@@ -71,7 +87,7 @@ model Destination {
   updatedAt        DateTime @updatedAt
   name             String
   status           String   @default("REACHABLE")
-  destinationType  String
+  destinationType  String   @default("PROVISIONED_S3")
   connectionString String?
 
   transfers       Transfer[]
