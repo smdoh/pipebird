@@ -12,5 +12,5 @@
     "lib": ["esnext"],
     "sourceMap": true
   },
-  "exclude": ["tests", "node_modules"]
+  "exclude": ["tests", "node_modules", "prisma"]
 }

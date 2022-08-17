@@ -10,7 +10,6 @@ import { ErrorApiSchema } from "../lib/handlers.js";
 import { httpLogger, logger } from "../lib/logger.js";
 import { HttpStatusCode } from "../utils/http.js";
 import { indexRouter } from "./routes/index.js";
-import helmet from "helmet";
 
 const app = express();
 
@@ -18,7 +17,6 @@ app.disable("x-powered-by");
 app.disable("etag");
 
 app.use(express.json());
-app.use(helmet());
 app.use(httpLogger);
 
 app.use(

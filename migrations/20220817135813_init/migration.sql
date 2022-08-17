@@ -1,3 +1,5 @@
+PRAGMA journal_mode = WAL;
+
 -- CreateTable
 CREATE TABLE "Tenant" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
