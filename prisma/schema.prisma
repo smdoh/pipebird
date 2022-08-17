@@ -15,20 +15,20 @@ model Tenant {
   destinations Destination[]
 }
 
-model ConfigurationColumn {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ColumnTransformation {
+  id                      Int           @id @default(autoincrement())
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  nameInSource            String
+  nameInDestination       String
+  destinationFormatString String
+  transformer             String
+  isPrimaryKey            Boolean
+  isLastModified          Boolean
+  configuration           Configuration @relation(fields: [configurationId], references: [id])
+  configurationId         Int
 
-  column_name         String
-  name_in_source      String
-  name_in_destination String
-  dest_format_str     String
-  transformer         String
-  is_primary_key      Boolean
-  is_last_modified    Boolean
-  configuration       Configuration @relation(fields: [configurationId], references: [id])
-  configurationId     Int
+  @@unique([configurationId, nameInDestination]) // no duplicate configuration columns
 }
 
 model Configuration {
@@ -36,10 +36,10 @@ model Configuration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  destinations        Destination[] // might want to fork data into multiple warehouses
-  view                View                  @relation(fields: [viewId], references: [id], onDelete: Cascade)
-  viewId              Int
-  ConfigurationColumn ConfigurationColumn[]
+  destinations Destination[] // might want to fork data into multiple warehouses
+  view         View                   @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId       Int
+  columns      ColumnTransformation[]
 }
 
 model View {
