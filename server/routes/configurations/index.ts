@@ -1,7 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { Router } from "express";
+import { Response, Router } from "express";
 import { db } from "../../../lib/db.js";
-import { ApiResponse, ListApiResponse } from "../../../lib/handlers.js";
+import {
+  ApiResponse,
+  ErrorApiSchema,
+  ListApiResponse,
+} from "../../../lib/handlers.js";
 import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
 import { default as validator } from "validator";
@@ -181,7 +185,7 @@ configurationRouter.get(
 // Delete configuration
 configurationRouter.delete(
   "/:configurationId",
-  async (req, res: ApiResponse<ConfigurationResponse>) => {
+  async (req, res: Response<ErrorApiSchema>) => {
     const queryParams = z
       .object({
         configurationId: z
@@ -206,27 +210,13 @@ configurationRouter.delete(
       where: {
         id: queryParams.data.configurationId,
       },
-      select: {
-        id: true,
-        viewId: true,
-        columns: {
-          select: {
-            nameInSource: true,
-            nameInDestination: true,
-            destinationFormatString: true,
-            transformer: true,
-            isPrimaryKey: true,
-            isLastModified: true,
-          },
-        },
-      },
     });
     if (!configuration) {
       return res
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "configuration_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json(configuration);
+    return res.status(HttpStatusCode.NO_CONTENT);
   },
 );
 

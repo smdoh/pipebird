@@ -1,7 +1,11 @@
-import { Destination, Prisma } from "@prisma/client";
-import { Router } from "express";
+import { Prisma } from "@prisma/client";
+import { Response, Router } from "express";
 import { db } from "../../../lib/db.js";
-import { ApiResponse, ListApiResponse } from "../../../lib/handlers.js";
+import {
+  ApiResponse,
+  ErrorApiSchema,
+  ListApiResponse,
+} from "../../../lib/handlers.js";
 import { cursorPaginationValidator } from "../../../lib/pagination.js";
 import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
@@ -152,7 +156,7 @@ destinationRouter.get(
 // Delete destination
 destinationRouter.delete(
   "/:destinationId",
-  async (req, res: ApiResponse<DestinationResponse>) => {
+  async (req, res: Response<ErrorApiSchema>) => {
     const queryParams = z
       .object({
         destinationId: z
@@ -173,20 +177,13 @@ destinationRouter.delete(
       where: {
         id: queryParams.data.destinationId,
       },
-      select: {
-        id: true,
-        tenantId: true,
-        name: true,
-        configurationId: true,
-        destinationType: true,
-      },
     });
     if (!destination) {
       return res
         .status(HttpStatusCode.NOT_FOUND)
         .json({ code: "destination_id_not_found" });
     }
-    return res.status(HttpStatusCode.OK).json(destination);
+    return res.status(HttpStatusCode.NO_CONTENT);
   },
 );
 export { destinationRouter };
