@@ -35,6 +35,10 @@
     {
       "name": "Views",
       "description": "Materialized view of a table created from some source"
+    },
+    {
+      "name": "Logs",
+      "description": "Log items to be used for auditability"
     }
   ],
   "paths": {
@@ -128,7 +132,7 @@
       "delete": {
         "tags": ["Sources"],
         "summary": "Delete source",
-        "description": "Delete source. This will cancel any ongoing transfers from this source.",
+        "description": "Delete source. You cannot delete sources if there is an in progress transfer.",
         "operationId": "delete-sources-source_id",
         "responses": {
           "204": {
@@ -223,7 +227,7 @@
       "delete": {
         "summary": "Delete view",
         "tags": ["Views"],
-        "description": "This will delete all configurations associated with this view and cancel associated transfers.",
+        "description": "Delete view. You cannot delete a view if there is an ongoing transfer.",
         "operationId": "delete-views-view_id",
         "responses": {
           "204": {
@@ -326,7 +330,7 @@
         "operationId": "get-configuration-by-id"
       },
       "delete": {
-        "description": "Delete configuration",
+        "description": "Delete configuration. Cannot delete configuration if transfer is ongoing.",
         "tags": ["Configurations"],
         "summary": "Delete configuration",
         "operationId": "delete-configurations-configuration_id",
@@ -420,7 +424,7 @@
         }
       ],
       "delete": {
-        "description": "Delete destination",
+        "description": "Delete destination. Cannot delete destination if transfer in progress.",
         "summary": "Delete destination",
         "tags": ["Destinations"],
         "operationId": "delete-destinations-destination_id",
@@ -542,6 +546,76 @@
             }
           }
         }
+      }
+    },
+    "/logs": {
+      "get": {
+        "summary": "List logs",
+        "tags": ["Logs"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Log"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-logs",
+        "description": "List event logs"
+      }
+    },
+    "/logs/{log_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "log_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this log."
+        }
+      ],
+      "get": {
+        "summary": "Get log",
+        "tags": ["Logs"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Log"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-logs-log_id",
+        "description": "Get a log by id."
+      },
+      "delete": {
+        "tags": ["Logs"],
+        "summary": "Delete log",
+        "operationId": "delete-logs-log_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "Delete log"
       }
     }
   },
@@ -702,7 +776,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "number"
           },
           "destinationId": {
             "type": "number"
@@ -887,6 +961,31 @@
             "type": "number"
           }
         }
+      },
+      "Log": {
+        "title": "Log",
+        "x-stoplight": {
+          "id": "7jhuhdy38k5lt"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "eventAction": {
+            "type": "string"
+          },
+          "eventSource": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "string"
+          }
+        },
+        "description": "Log entries to be used for auditability. For example, we will record logs for when resources get deleted, transfers begin and finish, and when resources are created."
       }
     },
     "securitySchemes": {

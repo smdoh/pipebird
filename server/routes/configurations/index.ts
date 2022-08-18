@@ -10,6 +10,7 @@ import { HttpStatusCode } from "../../../utils/http.js";
 import { z } from "zod";
 import { default as validator } from "validator";
 import { cursorPaginationValidator } from "../../../lib/pagination.js";
+import { TransferStatus } from "../../../types/index.js";
 const configurationRouter = Router();
 
 type ConfigurationResponse = Prisma.ConfigurationGetPayload<{
@@ -205,6 +206,24 @@ configurationRouter.delete(
         validationIssues: queryParams.error.issues,
       });
     }
+
+    // await db.configuration.deleteMany({
+    //   where: {
+    //     id: queryParams.data.configurationId,
+    //     destinations: {
+    //       some: {
+    //         transfers: {},
+    //       },
+    //     },
+    //   },
+
+    //   delete: {},
+    // });
+    // await db.transfer.deleteMany({
+    //   where: {
+    //     ''
+    //   }
+    // })
 
     const configuration = await db.configuration.delete({
       where: {
