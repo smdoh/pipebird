@@ -91,3 +91,14 @@ model Transfer {
   destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   destinationId Int
 }
+
+model Logs {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  eventAction String
+  eventSource String
+  eventId     String
+
+  meta String
+}

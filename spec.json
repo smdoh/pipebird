@@ -1,0 +1,1003 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Realize",
+    "description": "Private VPC data etl pipeline",
+    "version": "1.0",
+    "contact": {
+      "url": "realizefi.com",
+      "name": "Curtis Mason",
+      "email": "curtis@realizefi.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Configurations",
+      "description": "Configuration defining transformations for a materialized view"
+    },
+    {
+      "name": "Transfers",
+      "description": "Progress of a data transfer between sources, and destinations"
+    },
+    {
+      "name": "Destinations",
+      "description": "Data destinations indicating final location of a pipeline"
+    },
+    {
+      "name": "Sources",
+      "description": "Initial data source for a pipeline"
+    },
+    {
+      "name": "Views",
+      "description": "Materialized view of a table created from some source"
+    },
+    {
+      "name": "Logs",
+      "description": "Log items to be used for auditability"
+    }
+  ],
+  "paths": {
+    "/sources": {
+      "get": {
+        "summary": "List sources",
+        "tags": ["Sources"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Source"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-sources",
+        "description": "List all of your data sources"
+      },
+      "post": {
+        "summary": "Create source",
+        "tags": ["Sources"],
+        "operationId": "post-sources",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSource"
+              }
+            }
+          },
+          "description": "Create data source payload. Views may later pipe data from this source"
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            }
+          }
+        },
+        "description": "Returns identifier of the created data source"
+      },
+      "parameters": []
+    },
+    "/sources/{source_id}": {
+      "parameters": [
+        {
+          "description": "The id of this data source",
+          "schema": {
+            "type": "string"
+          },
+          "name": "source_id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get source",
+        "operationId": "get-source-by-id",
+        "description": "Get data source info",
+        "tags": ["Sources"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Sources"],
+        "summary": "Delete source",
+        "description": "Delete source. You cannot delete sources if there is an in progress transfer.",
+        "operationId": "delete-sources-source_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/views": {
+      "get": {
+        "summary": "List views",
+        "tags": ["Views"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/View"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-views",
+        "description": "List all materialized views"
+      },
+      "post": {
+        "summary": "Create view",
+        "tags": ["Views"],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/View"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-views",
+        "description": "Create a new materialized view for a given integration based on a table expression",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/views/{view_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "view_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this view"
+        }
+      ],
+      "get": {
+        "description": "Get a view by ID. Views represent tabular data piped from a specific data source. Custoemrs may then defined configurations to modify views",
+        "summary": "Get view",
+        "tags": ["Views"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/View"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-views-view_id"
+      },
+      "delete": {
+        "summary": "Delete view",
+        "tags": ["Views"],
+        "description": "Delete view. You cannot delete a view if there is an ongoing transfer.",
+        "operationId": "delete-views-view_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/configurations": {
+      "get": {
+        "summary": "List configurations",
+        "tags": ["Configurations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Configuration"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-configs",
+        "description": "List all customer configuration sets"
+      },
+      "post": {
+        "summary": "Create configuration",
+        "tags": ["Configurations"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-configs",
+        "description": "Create a new transformation configuration to be applied on some given view",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConfiguration"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          },
+          "description": "Configuration request payload"
+        }
+      },
+      "parameters": []
+    },
+    "/configurations/{configuration_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "configuration_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this configuration object"
+        }
+      ],
+      "get": {
+        "summary": "Get configuration",
+        "description": "Get customer defined transformation(s) configuration set",
+        "tags": ["Configurations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-configuration-by-id"
+      },
+      "delete": {
+        "description": "Delete configuration. Cannot delete configuration if transfer is ongoing.",
+        "tags": ["Configurations"],
+        "summary": "Delete configuration",
+        "operationId": "delete-configurations-configuration_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/destinations": {
+      "get": {
+        "summary": "List destinations",
+        "tags": ["Destinations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "$ref": "#/components/schemas/Destination"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-destinations",
+        "description": "A list of all the output destinations created by customers"
+      },
+      "post": {
+        "summary": "Create destination",
+        "tags": ["Destinations"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Destination"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-destinations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDestination"
+              }
+            }
+          }
+        },
+        "description": "Create a new destination on behalf of a customer according to a set of configurations"
+      }
+    },
+    "/destinations/{destination_id}": {
+      "get": {
+        "description": "Get destination by id",
+        "summary": "Get destination",
+        "operationId": "get-destination-by-id",
+        "tags": ["Destinations"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Destination"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "destination_id",
+          "in": "path",
+          "required": true,
+          "description": "The id for this destination object"
+        }
+      ],
+      "delete": {
+        "description": "Delete destination. Cannot delete destination if transfer in progress.",
+        "summary": "Delete destination",
+        "tags": ["Destinations"],
+        "operationId": "delete-destinations-destination_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/transfers": {
+      "parameters": [],
+      "post": {
+        "summary": "Initiate transfer",
+        "tags": ["Transfers"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transfer"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-transfers",
+        "parameters": [],
+        "description": "Initialize a new transfer for a given destination",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransfer"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          },
+          "description": "Create transfer payload"
+        }
+      },
+      "get": {
+        "summary": "List transfers",
+        "tags": ["Transfers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Transfer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-transfers",
+        "description": "List all previous transfers for a given destination"
+      }
+    },
+    "/transfers/{transfer_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "transfer_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this transfer object"
+        }
+      ],
+      "get": {
+        "summary": "Get transfer progress",
+        "description": "Get a transfer object which represents the status of a created data pipeline",
+        "tags": ["Transfers"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transfer"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-destinations-destination_id-transfers-transfer_id"
+      },
+      "delete": {
+        "tags": ["Transfers"],
+        "summary": "Cancel transfer",
+        "description": "Cancel this transfer. Poll transfer by id to determine when transfer successfully cancelled.",
+        "operationId": "delete-transfers-transfer_id",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transfer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "summary": "List logs",
+        "tags": ["Logs"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Log"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "list-logs",
+        "description": "List event logs"
+      }
+    },
+    "/logs/{log_id}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "log_id",
+          "in": "path",
+          "required": true,
+          "description": "The id of this log."
+        }
+      ],
+      "get": {
+        "summary": "Get log",
+        "tags": ["Logs"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Log"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-logs-log_id",
+        "description": "Get a log by id."
+      },
+      "delete": {
+        "tags": ["Logs"],
+        "summary": "Delete log",
+        "operationId": "delete-logs-log_id",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "Delete log"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Configuration": {
+        "title": "Configuration",
+        "x-stoplight": {
+          "id": "veg4lphalqaxn"
+        },
+        "type": "object",
+        "properties": {
+          "viewId": {
+            "type": "number"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nameInSource": {
+                  "type": "string"
+                },
+                "nameInDestination": {
+                  "type": "string"
+                },
+                "destinationFormatString": {
+                  "type": "string"
+                },
+                "transformer": {
+                  "type": "string"
+                },
+                "isPrimaryKey": {
+                  "type": "boolean"
+                },
+                "isLastModified": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "View": {
+        "title": "View",
+        "x-stoplight": {
+          "id": "yrvycyz8waltq"
+        },
+        "type": "object",
+        "properties": {
+          "tableExpression": {
+            "type": "string"
+          },
+          "tenantColumn": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "number"
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "Source": {
+        "title": "Source",
+        "x-stoplight": {
+          "id": "buaus9gq5e5dw"
+        },
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "sourceType": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "id": {
+            "type": "number"
+          }
+        }
+      },
+      "Destination": {
+        "title": "Destination",
+        "x-stoplight": {
+          "id": "el9hfq298kemv"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["PROVISIONED_S3"]
+              },
+              "configurationType": {
+                "type": "number"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              }
+            }
+          },
+          {
+            "properties": {
+              "configurationId": {
+                "type": "number"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["POSTGRES", "MYSQL"]
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number"
+              },
+              "database": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              }
+            }
+          }
+        ],
+        "type": "object"
+      },
+      "Transfer": {
+        "title": "Transfer",
+        "x-stoplight": {
+          "id": "bxsgfx59csf0r"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "destinationId": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "finalizedAt": {
+            "type": ["string", "null"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["STARTED", "PENDING", "COMPLETE", "FAILED", "CANCELLED"]
+          }
+        }
+      },
+      "SourceType": {
+        "type": "string",
+        "title": "SourceTypes",
+        "x-stoplight": {
+          "id": "2prtl486bum6x"
+        },
+        "enum": ["MYSQL", "POSTGRES", "SNOWFLAKE", "REDSHIFT", "BIGQUERY"]
+      },
+      "Status": {
+        "type": "string",
+        "title": "Status",
+        "x-stoplight": {
+          "id": "t56y9xrybpdkz"
+        },
+        "enum": ["REACHABLE", "UNREACHABLE"]
+      },
+      "CreateConfiguration": {
+        "title": "CreateConfiguration",
+        "x-stoplight": {
+          "id": "g45k1cg1s4jnj"
+        },
+        "type": "object",
+        "properties": {
+          "viewId": {
+            "type": "number"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nameInSource": {
+                  "type": "string"
+                },
+                "nameInDestination": {
+                  "type": "string"
+                },
+                "destinationFormatString": {
+                  "type": "string"
+                },
+                "transformer": {
+                  "type": "string"
+                },
+                "isPrimaryKey": {
+                  "type": "boolean"
+                },
+                "isLastModified": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateSource": {
+        "title": "CreateSource",
+        "x-stoplight": {
+          "id": "b933qso2brbv3"
+        },
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sourceType": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "host": {
+            "type": "string"
+          },
+          "port": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateDestination": {
+        "title": "CreateDestination",
+        "x-stoplight": {
+          "id": "imd725at5ztyy"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "configurationId": {
+                "type": "number"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["POSTGRES", "MYSQL"]
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number"
+              },
+              "database": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "destinationType": {
+                "type": "string",
+                "enum": ["PROVISIONED_S3"]
+              },
+              "filename": {
+                "type": "string"
+              },
+              "configurationId": {
+                "type": "number"
+              },
+              "tenantId": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "type": "object"
+      },
+      "CreateTransfer": {
+        "title": "CreateTransfer",
+        "x-stoplight": {
+          "id": "uo9wrwwm66em1"
+        },
+        "type": "object",
+        "properties": {
+          "destinationId": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateView": {
+        "title": "CreateView",
+        "x-stoplight": {
+          "id": "hstgftguuqy0k"
+        },
+        "type": "object",
+        "properties": {
+          "tableExpression": {
+            "type": "string"
+          },
+          "tenantColumn": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "number"
+          }
+        }
+      },
+      "Log": {
+        "title": "Log",
+        "x-stoplight": {
+          "id": "7jhuhdy38k5lt"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "eventAction": {
+            "type": "string"
+          },
+          "eventSource": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "string"
+          }
+        },
+        "description": "Log entries to be used for auditability. For example, we will record logs for when resources get deleted, transfers begin and finish, and when resources are created."
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
+}
